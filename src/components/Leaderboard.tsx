@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Trophy, TrendingUp, Users, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react'
+import { Trophy, TrendingUp, Users, ChevronDown, ChevronUp, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { LeaderboardEntry } from '../types'
 
@@ -63,6 +63,8 @@ export function Leaderboard() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all-time')
   const [sortField, setSortField] = useState<SortField>('totalAmount')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -96,6 +98,26 @@ export function Leaderboard() {
     return sortDirection === 'asc' ? comparison : -comparison
   })
 
+  // Pagination calculations
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedData = sortedData.slice(startIndex, endIndex)
+
+  // Reset to first page when sorting or filtering changes
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [sortField, sortDirection, timeFilter])
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleItemsPerPageChange = (items: number) => {
+    setItemsPerPage(items)
+    setCurrentPage(1)
+  }
+
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
       return <ArrowUpDown className="w-4 h-4 text-gray-500" />
@@ -117,7 +139,21 @@ export function Leaderboard() {
           Leaderboard
         </h2>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300">Show:</label>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+              className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+          
           <label className="text-sm font-medium text-gray-300">Time Period:</label>
           <select
             value={timeFilter}
@@ -189,7 +225,7 @@ export function Leaderboard() {
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((entry, index) => (
+            {paginatedData.map((entry, index) => (
               <motion.tr
                 key={entry.walletAddress}
                 initial={{ opacity: 0, y: 10 }}
@@ -199,7 +235,7 @@ export function Leaderboard() {
               >
                 <td className="py-4 px-4">
                   <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full text-black font-bold text-sm">
-                    {index + 1}
+                    {startIndex + index + 1}
                   </div>
                 </td>
                 <td className="py-4 px-4">
@@ -250,7 +286,72 @@ export function Leaderboard() {
         </table>
       </div>
 
-      {sortedData.length === 0 && (
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-gray-400">
+            Showing {startIndex + 1} to {Math.min(endIndex, sortedData.length)} of {sortedData.length} entries
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                // Show first page, last page, current page, and pages around current page
+                const showPage = 
+                  page === 1 || 
+                  page === totalPages || 
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                
+                if (!showPage) {
+                  // Show ellipsis for gaps
+                  if (page === currentPage - 2 || page === currentPage + 2) {
+                    return (
+                      <span key={page} className="px-2 text-gray-400">
+                        ...
+                      </span>
+                    )
+                  }
+                  return null
+                }
+                
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-2 rounded-lg transition-colors ${
+                      currentPage === page
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              })}
+            </div>
+            
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {paginatedData.length === 0 && sortedData.length === 0 && (
         <div className="text-center py-12 text-gray-400">
           <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p>No leaderboard data available</p>
