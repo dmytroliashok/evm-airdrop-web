@@ -28,4 +28,6 @@ export interface AirdropTransaction {
   totalAmount: string
   timestamp: Date
   txHash: string
+  status: 'pending' | 'completed' | 'failed'
+  recipients: AirdropData[]
 }
