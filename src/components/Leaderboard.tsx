@@ -158,7 +158,7 @@ export function Leaderboard() {
           <select
             value={timeFilter}
             onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
-            className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors"
+            className="px-3 py-2 bg-gray-700 borde000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000r border-gray-600 rounded-lg text-white text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors"
           >
             <option value="all-time">All Time</option>
             <option value="7-days">Last 7 Days</option>
