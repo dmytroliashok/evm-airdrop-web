@@ -11,6 +11,7 @@ import {
 import { parseUnits, formatUnits } from "viem";
 import { AirdropData } from "../types";
 import { useTokenInfo } from "../hooks/useTokenInfo";
+import { useAirdropAPI } from "../hooks/useAirdropAPI";
 import toast from "react-hot-toast";
 import { config } from "../config/wagmi";
 
@@ -81,6 +82,7 @@ export function AirdropForm({ tokenAddress, recipients }: AirdropFormProps) {
   >("none");
 
   const tokenInfo = useTokenInfo(tokenAddress);
+  const { saveAirdropData, isSaving } = useAirdropAPI();
 
   // Check current allowance
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -230,6 +232,11 @@ export function AirdropForm({ tokenAddress, recipients }: AirdropFormProps) {
       toast.success(
         `Airdrop executed successfully to ${recipients.length} recipients!`
       );
+      
+      // Save airdrop data to backend
+      if (txHash && walletAddress) {
+        saveAirdropToBackend(txHash);
+      }
     }
     if (isError) {
       setIsExecuting(false);
@@ -242,6 +249,24 @@ export function AirdropForm({ tokenAddress, recipients }: AirdropFormProps) {
       toast.error("Airdrop execution canceled");
     }
   }, [isConfirming, isSuccess, isError, isPaused, recipients.length]);
+
+  const saveAirdropToBackend = async (transactionHash: string) => {
+    if (!walletAddress || !tokenInfo) return;
+
+    const totalAmount = recipients.reduce(
+      (sum, recipient) => sum + parseFloat(recipient.amount || "0"),
+      0
+    );
+
+    await saveAirdropData({
+      fromAddress: walletAddress,
+      tokenAddress: tokenAddress || 'native', // Use 'native' for native tokens
+      tokenSymbol: tokenInfo?.symbol || 'HYPE',
+      recipients: recipients,
+      totalAmount: totalAmount.toString(),
+      txHash: transactionHash,
+    });
+  };
 
   return (
     <motion.div
@@ -310,13 +335,13 @@ export function AirdropForm({ tokenAddress, recipients }: AirdropFormProps) {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleExecuteAirdrop}
-          disabled={isExecuting || recipients.length === 0}
+          disabled={isExecuting || recipients.length === 0 || isSaving}
           className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200 shadow-lg"
         >
-          {isExecuting ? (
+          {isExecuting || isSaving ? (
             <>
               <Loader className="w-5 h-5 animate-spin" />
-              Executing Airdrop...
+              {isExecuting ? 'Executing Airdrop...' : 'Saving Data...'}
             </>
           ) : (
             <>
@@ -335,6 +360,15 @@ export function AirdropForm({ tokenAddress, recipients }: AirdropFormProps) {
             <p className="text-green-300 text-sm font-medium">
               Token spending approved! You can now execute the airdrop.
             </p>
+          </div>
+        </div>
+      )}
+
+      {isSaving && (
+        <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Loader className="w-5 h-5 animate-spin text-blue-400" />
+            <p className="text-blue-300 text-sm font-medium">Saving airdrop data...</p>
           </div>
         </div>
       )}

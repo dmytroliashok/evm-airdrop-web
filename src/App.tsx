@@ -11,6 +11,7 @@ import { WalletConnection } from './components/WalletConnection'
 import { TokenSelector } from './components/TokenSelector'
 import { CSVHandler } from './components/CSVHandler'
 import { AirdropForm } from './components/AirdropForm'
+import { AirdropHistory } from './components/AirdropHistory'
 import { Leaderboard } from './components/Leaderboard'
 import { AirdropData } from './types'
 
@@ -77,6 +78,10 @@ function App() {
                   tokenAddress={selectedToken} 
                   recipients={airdropData} 
                 />
+              </div>
+
+              <div className="mb-8">
+                <AirdropHistory />
               </div>
 
               <Leaderboard />
