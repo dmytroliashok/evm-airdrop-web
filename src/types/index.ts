@@ -6,12 +6,9 @@ export interface AirdropData {
 export interface LeaderboardEntry {
   walletAddress: string
   totalAmountSent: string
-  uniqueWalletsReached: number
-  tokensSent: {
-    tokenAddress: string
-    tokenSymbol: string
-    amount: string
-  }[]
+  walletsReached: number
+  tokenAddress: string
+  tokenSymbol: string
   lastActivity: Date
 }
 
